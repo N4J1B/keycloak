@@ -7,23 +7,21 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - 5432:5432
+    # ports:
+    #   - 5432:5432  # DISABLED - PostgreSQL hanya accessible dari Docker network
     networks:
       - keycloak_network
 
   keycloak:
 
-    image: quay.io/keycloak/keycloak:26.4
-    command: start-dev
+    image: mykeycloak:latest
+    command: start --optimized
 
     environment:
+      TAILCLOAKIFY_SHOW_SOCIAL_PROVIDERS_ON_REGISTER: "TRUE"
       KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
-      KC_HTTP_ENABLED: true
-      KC_HEALTH_ENABLED: true
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
@@ -31,11 +29,7 @@ services:
       KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/conf/certs/34.171.206.226-key.pem
     ports:
       - 8443:8443
-      - 8080:8080
       - 9000:9000
-    volumes:
-      - ./certs:/opt/keycloak/conf/certs
-      - ./themes:/opt/keycloak/providers/
     restart: unless-stopped
     depends_on:
       - postgres
