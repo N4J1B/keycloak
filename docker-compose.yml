@@ -13,10 +13,8 @@ services:
       - keycloak_network
 
   keycloak:
-
     image: mykeycloak:latest
     command: start --optimized
-
     environment:
       TAILCLOAKIFY_SHOW_SOCIAL_PROVIDERS_ON_REGISTER: "TRUE"
       KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
@@ -35,6 +33,23 @@ services:
       - postgres
     networks:
       - keycloak_network
+
+  keycloak-exporter:
+    image: mykeycloak:latest
+    command: export --users same_file --dir /opt/keycloak/data/export
+    volumes:
+      - ./data:/opt/keycloak/data/export
+      - ./certs:/opt/keycloak/conf/certs
+    environment:
+      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
+    networks:
+      - keycloak_network
+    profiles:
+      - export
 
 volumes:
   postgres_data:
