@@ -1,17 +1,4 @@
 services:
-  postgres:
-    image: postgres:16.2
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    # ports:
-    #   - 5432:5432  # DISABLED - PostgreSQL hanya accessible dari Docker network
-    networks:
-      - keycloak_network
-
   keycloak:
     image: mykeycloak:latest
     command: start --optimized
@@ -20,7 +7,7 @@ services:
       KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
+      KC_DB_URL: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/conf/certs/34.171.206.226.pem
@@ -29,8 +16,6 @@ services:
       - 8443:8443
       - 9000:9000
     restart: unless-stopped
-    depends_on:
-      - postgres
     networks:
       - keycloak_network
 
@@ -41,19 +26,13 @@ services:
       - ./data:/opt/keycloak/data/export
       - ./certs:/opt/keycloak/conf/certs
     environment:
-      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
+      KC_DB_URL: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-    depends_on:
-      - postgres
     networks:
       - keycloak_network
     profiles:
       - export
-
-volumes:
-  postgres_data:
-    driver: local
 
 networks:
   keycloak_network:
